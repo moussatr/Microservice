@@ -1,0 +1,20 @@
+{
+  "name": "location-voiture",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start:annonce": "cd service-annonce && npm start",
+    "start:listing": "cd service-listing && npm start",
+    "start:consultation": "cd service-consultation && npm start",
+    "start:location": "cd service-location && npm start",
+    "start:frontend": "cd car-rental-frontend && npm start",
+    "start:all": "concurrently \"npm run start:annonce\" \"npm run start:listing\" \"npm run start:consultation\" \"npm run start:location\" \"npm run start:frontend\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
