@@ -1,5 +1,5 @@
 const express = require("express");
-require("./messageConsumer");
+require("./consumer");
 const connectDatabase = require("./config/database");
 const consultationRoutes = require("./routes/consultations");
 

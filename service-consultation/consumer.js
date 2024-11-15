@@ -2,6 +2,8 @@ const Annonce = require("./models/Annonce");
 const { consumeQueue } = require("./messageBroker");
 
 consumeQueue("annonces_consultation", async (message) => {
+  console.log("Message reçu dans service-consultation :", message);
+
   const { event, data } = message;
 
   if (event === "NEW_ANNONCE") {

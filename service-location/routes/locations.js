@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const locationController = require("../controllers/locationController");
+const { louerAnnonce } = require("../controllers/locationController");
 
-router.put("/:id/louer", locationController.louerAnnonce);
+router.post("/:id/louer", louerAnnonce);
 
 module.exports = router;

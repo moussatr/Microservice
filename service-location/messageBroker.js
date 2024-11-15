@@ -1,32 +1,48 @@
 const amqp = require("amqplib");
 
-let channel, connection;
+let connection;
+let channel;
 
-async function connectBroker() {
-  try {
-    connection = await amqp.connect(process.env.RABBITMQ_URL);
-    channel = await connection.createChannel();
+async function connectRabbitMQ() {
+  if (!connection) {
+    connection = await amqp.connect("amqp://localhost");
     console.log("Connected to RabbitMQ");
-
-    await channel.assertQueue("locations", { durable: true });
-  } catch (error) {
-    console.error("RabbitMQ connection error:", error);
   }
 }
 
-function publishToQueue(queue, message) {
+async function createChannel() {
+  if (!connection) await connectRabbitMQ();
+  return await connection.createChannel();
+}
+
+async function publishToQueue(message) {
   if (!channel) {
-    console.error("Erreur: canal RabbitMQ non disponible.");
-    return;
-  }
-  try {
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)), {
-      persistent: true,
+    channel = await createChannel();
+    await channel.assertExchange("annonces_exchange", "fanout", {
+      durable: true,
     });
-    console.log(`Message publié dans la queue ${queue}`);
-  } catch (error) {
-    console.error("Erreur lors de la publication du message:", error);
   }
+  channel.publish(
+    "annonces_exchange",
+    "",
+    Buffer.from(JSON.stringify(message))
+  );
 }
 
-module.exports = { connectBroker, publishToQueue };
+async function consumeQueue(queueName, handleMessage) {
+  const localChannel = await createChannel();
+  await localChannel.assertQueue(queueName, { durable: true });
+  await localChannel.bindQueue(queueName, "annonces_exchange", "");
+  console.log(`Queue ${queueName} est liée à annonces_exchange`);
+
+  localChannel.consume(queueName, async (msg) => {
+    if (msg !== null) {
+      console.log(`Message reçu dans ${queueName}:`, msg.content.toString());
+      const message = JSON.parse(msg.content.toString());
+      await handleMessage(message);
+      localChannel.ack(msg);
+    }
+  });
+}
+
+module.exports = { publishToQueue, consumeQueue };
