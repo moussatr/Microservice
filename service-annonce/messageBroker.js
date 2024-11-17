@@ -40,7 +40,6 @@ async function consumeQueue(queueName, handleMessage) {
 
   channel.consume(queueName, async (msg) => {
     if (msg !== null) {
-      console.log(`Message reçu dans ${queueName}:`, msg.content.toString());
       const message = JSON.parse(msg.content.toString());
       await handleMessage(message);
       channel.ack(msg);

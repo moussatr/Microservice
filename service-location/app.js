@@ -1,5 +1,4 @@
 const express = require("express");
-// require("./consumer");
 const connectDatabase = require("./config/database");
 const locationRoutes = require("./routes/locations");
 
