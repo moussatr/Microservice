@@ -1,7 +1,8 @@
 const express = require("express");
-require("./consumer");
+// require("./consumer");
 const connectDatabase = require("./config/database");
 const locationRoutes = require("./routes/locations");
+
 require("dotenv").config();
 
 const app = express();

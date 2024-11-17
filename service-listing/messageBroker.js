@@ -31,6 +31,9 @@ async function publishToQueue(message) {
 
 async function consumeQueue(queueName, handleMessage) {
   const localChannel = await createChannel();
+  await localChannel.assertExchange("locations_exchange", "topic", {
+    durable: true,
+  });
   await localChannel.assertQueue(queueName, { durable: true });
   await localChannel.bindQueue(queueName, "annonces_exchange", "");
   console.log(`Queue ${queueName} est liée à annonces_exchange`);

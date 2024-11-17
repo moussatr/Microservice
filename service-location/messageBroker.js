@@ -3,46 +3,53 @@ const amqp = require("amqplib");
 let connection;
 let channel;
 
-async function connectRabbitMQ() {
-  if (!connection) {
-    connection = await amqp.connect("amqp://localhost");
-    console.log("Connected to RabbitMQ");
-  }
-}
+async function connectBroker() {
+  try {
+    connection = await amqp.connect(
+      process.env.RABBITMQ_URL || "amqp://localhost"
+    );
+    channel = await connection.createChannel();
 
-async function createChannel() {
-  if (!connection) await connectRabbitMQ();
-  return await connection.createChannel();
-}
-
-async function publishToQueue(message) {
-  if (!channel) {
-    channel = await createChannel();
-    await channel.assertExchange("annonces_exchange", "fanout", {
+    await channel.assertExchange("annonceExchange", "fanout", {
       durable: true,
     });
+    console.log("Connected to RabbitMQ and exchange configured");
+  } catch (error) {
+    console.error("RabbitMQ connection error:", error);
   }
-  channel.publish(
-    "annonces_exchange",
-    "",
-    Buffer.from(JSON.stringify(message))
-  );
+}
+
+async function publishToExchange(message) {
+  try {
+    if (!channel) await connectBroker();
+    channel.publish(
+      "annonceExchange",
+      "",
+      Buffer.from(JSON.stringify(message))
+    );
+  } catch (error) {
+    console.error("Error publishing message to exchange:", error);
+  }
 }
 
 async function consumeQueue(queueName, handleMessage) {
-  const localChannel = await createChannel();
-  await localChannel.assertQueue(queueName, { durable: true });
-  await localChannel.bindQueue(queueName, "annonces_exchange", "");
+  if (!channel) await connectRabbitMQ();
+  await channel.assertQueue(queueName, { durable: true });
+  await channel.bindQueue(queueName, "annonces_exchange", "");
   console.log(`Queue ${queueName} est liée à annonces_exchange`);
 
-  localChannel.consume(queueName, async (msg) => {
+  channel.consume(queueName, async (msg) => {
     if (msg !== null) {
       console.log(`Message reçu dans ${queueName}:`, msg.content.toString());
       const message = JSON.parse(msg.content.toString());
       await handleMessage(message);
-      localChannel.ack(msg);
+      channel.ack(msg);
     }
   });
 }
 
-module.exports = { publishToQueue, consumeQueue };
+process.on("exit", () => {
+  if (connection) connection.close();
+});
+
+module.exports = { connectBroker, publishToExchange, consumeQueue };

@@ -12,7 +12,7 @@ RabbitMQ.
 
 1. Cloner le projet.
 
-git clone <url-du-repository>.
+git clone <Microservice>.
 
 cd <nom-du-repository>.
 
